@@ -126,20 +126,11 @@ $(document).ready(function () {
 <h1>Reproducible Research: Peer Assessment 1</h1>
 <div id="loading-and-preprocessing-the-data" class="section level2">
 <h2>Loading and preprocessing the data</h2>
-<pre class="r"><code>library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(ggplot2)
-library(ggpubr)</code></pre>
-<pre><code>## Warning: package 'ggpubr' was built under R version 3.4.4</code></pre>
-<pre><code>## Loading required package: magrittr</code></pre>
-<pre class="r"><code>MyData &lt;- read.csv(&quot;activity.csv&quot;, header=TRUE, stringsAsFactors = FALSE, sep=&quot;,&quot;)
+<pre class="r"><code>library(dplyr)
+library(ggplot2)
+library(ggpubr)
+
+MyData &lt;- read.csv(&quot;activity.csv&quot;, header=TRUE, stringsAsFactors = FALSE, sep=&quot;,&quot;)
 print (&quot;Data loaded with read.csv&quot;)</code></pre>
 <pre><code>## [1] &quot;Data loaded with read.csv&quot;</code></pre>
 </div>

@@ -3,12 +3,11 @@ title: 'Johns Hopkins Especialization'
 output:
   html_document:
   keep_md: yes
-  pdf_document: default
 ---
 #Reproducible Research: Peer Assessment 1
 
 ## Loading and preprocessing the data
-```{r}
+```{r, echo = TRUE}
 library(dplyr)
 library(ggplot2)
 library(ggpubr)
@@ -17,7 +16,7 @@ MyData <- read.csv("activity.csv", header=TRUE, stringsAsFactors = FALSE, sep=",
 print ("Data loaded with read.csv")
 ```
 ## What is mean total number of steps taken per day?
-```{r}
+```{r, echo = TRUE}
 NewGroup <- group_by(MyData, date)
 NewGroup <- summarise(NewGroup, stepsPerDay = sum(steps, na.rm=TRUE), intervalsPerDay = n())
 print("Steps per day")
@@ -37,7 +36,7 @@ print (pA)
 
 ## What is the average daily activity pattern?
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- group_by(MyData, interval)
 NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
@@ -57,7 +56,7 @@ print(paste("The interval with more steps is the number", maxInterval$interval, 
 
 ## Imputing missing values
 
-```{r}
+```{r, echo = TRUE}
 totalNAs <- sum(is.na(MyData$steps))
 totalRows <- nrow(MyData)
 percetagofNAs <- totalNAs / totalRows
@@ -76,7 +75,7 @@ I will apply four strategies:
 
 ### Using the value 0
 
-```{r}
+```{r, echo = TRUE}
 
 newData <- mutate(MyData, steps = ifelse(is.na(steps), 0, steps))
 
@@ -110,7 +109,7 @@ print("In this case nothing happens.")
 
 ### Using the mean of that 5-minute interval
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- group_by(MyData, interval)
 NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
@@ -148,7 +147,7 @@ print("In this case we can aprreciate that the graphic changes.")
 
 ### Using the median of that 5-minute interval
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- group_by(MyData, interval)
 NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
@@ -189,7 +188,7 @@ print("In this case we can aprreciate that the graphic also changes.")
 ### Using the value 0
 ### Creating factor for weekday and weekend
 
-```{r}
+```{r, echo = TRUE}
 
 newData <- mutate(MyData, steps = ifelse(is.na(steps), 0, steps))
 newData$typeDay <- ifelse(weekdays(as.Date(newData$date)) %in% c("sábado", "domingo"), "weekend", "weekday")
@@ -201,7 +200,7 @@ print(table(newData$typeDay))
 
 ### Comparing weekday and weekend
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- select(newData, interval, steps, typeDay)
 NewGroup <- filter(NewGroup, typeDay == "weekend")
@@ -229,7 +228,7 @@ w2 <- p2
 ### Using the mean of that 5-minute interval
 ### Creating factor for weekday and weekend
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- group_by(MyData, interval)
 NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
@@ -245,7 +244,7 @@ print(table(newData$typeDay))
 
 ### Comparing weekday and weekend
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- select(newData, interval, steps, typeDay)
 NewGroup <- filter(NewGroup, typeDay == "weekend")
@@ -274,7 +273,7 @@ w4 <- p2
 ### Using the median of that 5-minute interval
 ### Creating factor for weekday and weekend
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- group_by(MyData, interval)
 NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
@@ -290,7 +289,7 @@ print(table(newData$typeDay))
 
 ### Comparing weekday and weekend
 
-```{r}
+```{r, echo = TRUE}
 
 NewGroup <- select(newData, interval, steps, typeDay)
 NewGroup <- filter(NewGroup, typeDay == "weekend")
