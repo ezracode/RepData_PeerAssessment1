@@ -1,25 +1,321 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: 'Johns Hopkins Especialization'
+output:
   html_document:
-    keep_md: true
+  keep_md: yes
+  pdf_document: default
 ---
 #Reproducible Research: Peer Assessment 1
 
 ## Loading and preprocessing the data
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
 
-
-
+MyData <- read.csv("activity.csv", header=TRUE, stringsAsFactors = FALSE, sep=",")
+print ("Data loaded with read.csv")
+```
 ## What is mean total number of steps taken per day?
+```{r}
+NewGroup <- group_by(MyData, date)
+NewGroup <- summarise(NewGroup, stepsPerDay = sum(steps, na.rm=TRUE), intervalsPerDay = n())
+print("Steps per day")
 
+ggplot(NewGroup, aes(x = date, y = stepsPerDay, color = I("#FF4081"))) + geom_bar(stat = "identity", fill = I("#512DA8"))
 
+meanA <- mean(NewGroup$stepsPerDay, na.rm = TRUE)
+medianA <- median(NewGroup$stepsPerDay, na.rm = TRUE)
+
+print(paste("Mean of steps per day", meanA))
+print(paste("Median of steps per day", medianA))
+
+pA <- ggplot(NewGroup, aes(stepsPerDay, color = I("#FF4081")) ) + geom_histogram(fill = I("#512DA8"))
+print (pA)
+
+```
 
 ## What is the average daily activity pattern?
 
+```{r}
 
+NewGroup <- group_by(MyData, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
+
+maxValue <- max(NewGroup$stepsPerInterval, na.rm = TRUE)
+maxInterval <- subset(NewGroup, stepsPerInterval == maxValue)
+
+ggplot(NewGroup, 
+       aes(x = interval, y = stepsPerInterval, group = 1, color = I("red"))) + 
+       geom_line() + 
+       annotate("text", x = maxInterval$interval - 210, y = maxInterval$stepsPerInterval, label = "Max Value >") +
+       annotate("point", shape = 21, size = 3, x = maxInterval$interval, y = maxInterval$stepsPerInterval, fill = I("#795548"))
+
+print(paste("The interval with more steps is the number", maxInterval$interval, "with", maxValue, "steps taken"))
+
+```
 
 ## Imputing missing values
 
+```{r}
+totalNAs <- sum(is.na(MyData$steps))
+totalRows <- nrow(MyData)
+percetagofNAs <- totalNAs / totalRows
 
+print(paste("Total of NAs in steps column:", totalNAs))
+print(paste("Percentage of NAs in step column:", percetagofNAs))
 
-## Are there differences in activity patterns between weekdays and weekends?
+```
+
+### Defining strategy to replace NAs.  
+I will apply four strategies:
+
+1. using the value 0
+2. using the mean of that 5-minute interval
+3. using the madian ot that 5-minute interval
+
+### Using the value 0
+
+```{r}
+
+newData <- mutate(MyData, steps = ifelse(is.na(steps), 0, steps))
+
+NewGroup <- group_by(newData, date)
+NewGroup <- summarise(NewGroup, stepsPerDay = sum(steps, na.rm=TRUE), intervalsPerDay = n())
+print("Steps per day")
+
+mean1 <- mean(NewGroup$stepsPerDay, na.rm = TRUE)
+median1 <- median(NewGroup$stepsPerDay, na.rm = TRUE)
+
+header <- c("Measure", "Original Dataset", "Using 0 instead of NAs")
+row1 <- c("mean", meanA, mean1)              
+row2 <- c("median", medianA, mean1)
+
+a <- data.frame(header, row1, row2)
+print(a)                  
+
+print("Do these values differ from the estimates from the first part of the assignment?")
+print("As we can see the value are the same.")
+
+p1 <- ggplot(NewGroup, aes(stepsPerDay, color = I("#FF4081")) ) + geom_histogram(fill = I("#512DA8"))
+
+ggarrange(pA, p1,
+          labels = c("With NAs", "With 0 in that 5-minute interval"), 
+          ncol = 2, nrow = 1)
+
+print("What is the impact of imputing missing data on the estimates of the total daily number of steps?")
+print("In this case nothing happens.")
+
+```
+
+### Using the mean of that 5-minute interval
+
+```{r}
+
+NewGroup <- group_by(MyData, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
+
+newData <- merge(MyData, NewGroup, by.x = "interval", by.y = "interval")
+newData <- mutate(newData, steps = ifelse(is.na(steps), meanPerInterval, steps))
+
+NewGroup <- group_by(newData, date)
+NewGroup <- summarise(NewGroup, stepsPerDay = sum(steps, na.rm=TRUE), intervalsPerDay = n())
+print("Steps per day")
+
+mean1 <- mean(NewGroup$stepsPerDay, na.rm = TRUE)
+median1 <- median(NewGroup$stepsPerDay, na.rm = TRUE)
+
+header <- c("Measure", "Original Dataset", "Using mean instead of NAs")
+row1 <- c("mean", meanA, mean1)              
+row2 <- c("median", medianA, mean1)
+
+a <- data.frame(header, row1, row2)
+print(a)                  
+
+print("Do these values differ from the estimates from the first part of the assignment?")
+print("As we can see the value are different.")
+
+p1 <- ggplot(NewGroup, aes(stepsPerDay, color = I("#FF4081")) ) + geom_histogram(fill = I("#512DA8"))
+
+ggarrange(pA, p1, 
+          labels = c("With NAs", "With mean of that 5-minute interval"),
+          ncol = 2, nrow = 1)
+
+print("What is the impact of imputing missing data on the estimates of the total daily number of steps?")
+print("In this case we can aprreciate that the graphic changes.")
+
+```
+
+### Using the median of that 5-minute interval
+
+```{r}
+
+NewGroup <- group_by(MyData, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
+
+newData <- merge(MyData, NewGroup, by.x = "interval", by.y = "interval")
+newData <- mutate(newData, steps = ifelse(is.na(steps), medianPerInterval, steps))
+
+NewGroup <- group_by(newData, date)
+NewGroup <- summarise(NewGroup, stepsPerDay = sum(steps, na.rm=TRUE), intervalsPerDay = n())
+print("Steps per day")
+
+mean1 <- mean(NewGroup$stepsPerDay, na.rm = TRUE)
+median1 <- median(NewGroup$stepsPerDay, na.rm = TRUE)
+
+header <- c("Measure", "Original Dataset", "Using median instead of NAs")
+row1 <- c("mean", meanA, mean1)              
+row2 <- c("median", medianA, mean1)
+
+a <- data.frame(header, row1, row2)
+print(a)                  
+
+print("Do these values differ from the estimates from the first part of the assignment?")
+print("As we can see the values also are different.")
+
+p1 <- ggplot(NewGroup, aes(stepsPerDay, color = I("#FF4081")) ) + geom_histogram(fill = I("#512DA8"))
+
+ggarrange(pA, p1, 
+          labels = c("With NAs", "With median of that 5-minute interval"),
+          ncol = 2, nrow = 1)
+
+print("What is the impact of imputing missing data on the estimates of the total daily number of steps?")
+print("In this case we can aprreciate that the graphic also changes.")
+
+```
+
+## Are there difference
+
+### Using the value 0
+### Creating factor for weekday and weekend
+
+```{r}
+
+newData <- mutate(MyData, steps = ifelse(is.na(steps), 0, steps))
+newData$typeDay <- ifelse(weekdays(as.Date(newData$date)) %in% c("sábado", "domingo"), "weekend", "weekday")
+
+print(head(newData, 10))
+print(table(newData$typeDay))
+
+```
+
+### Comparing weekday and weekend
+
+```{r}
+
+NewGroup <- select(newData, interval, steps, typeDay)
+NewGroup <- filter(NewGroup, typeDay == "weekend")
+NewGroup <- group_by(NewGroup, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
+
+p1 <- ggplot(NewGroup, 
+       aes(x = interval, y = stepsPerInterval, group = 1, color = I("red"))) + 
+       geom_line() + ylim(0, 12000) + ggtitle("weekend")
+
+NewGroup <- select(newData, interval, steps, typeDay)
+NewGroup <- filter(NewGroup, typeDay == "weekday")
+NewGroup <- group_by(NewGroup, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
+
+p2 <- ggplot(NewGroup, 
+       aes(x = interval, y = stepsPerInterval, group = 1, color = I("red"))) + 
+       geom_line() + ylim(0, 12000) + ggtitle("weekday")
+
+ggarrange(p1, p2, ncol = 1, nrow = 2)
+w1 <- p1
+w2 <- p2
+```
+
+### Using the mean of that 5-minute interval
+### Creating factor for weekday and weekend
+
+```{r}
+
+NewGroup <- group_by(MyData, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
+
+newData <- merge(MyData, NewGroup, by.x = "interval", by.y = "interval")
+newData <- mutate(newData, steps = ifelse(is.na(steps), meanPerInterval, steps))
+newData$typeDay <- ifelse(weekdays(as.Date(newData$date)) %in% c("sábado", "domingo"), "weekend", "weekday")
+
+print(head(newData, 10))
+print(table(newData$typeDay))
+
+```
+
+### Comparing weekday and weekend
+
+```{r}
+
+NewGroup <- select(newData, interval, steps, typeDay)
+NewGroup <- filter(NewGroup, typeDay == "weekend")
+NewGroup <- group_by(NewGroup, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
+
+p1 <- ggplot(NewGroup, 
+       aes(x = interval, y = stepsPerInterval, group = 1, color = I("red"))) + 
+       geom_line() + ylim(0, 12000) + ggtitle("weekend")
+
+NewGroup <- select(newData, interval, steps, typeDay)
+NewGroup <- filter(NewGroup, typeDay == "weekday")
+NewGroup <- group_by(NewGroup, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
+
+p2 <- ggplot(NewGroup, 
+       aes(x = interval, y = stepsPerInterval, group = 1, color = I("red"))) + 
+       geom_line() + ylim(0, 12000) + ggtitle("weekday")
+
+ggarrange(p1, p2, ncol = 1, nrow = 2)
+w3 <- p1
+w4 <- p2
+
+```
+
+### Using the median of that 5-minute interval
+### Creating factor for weekday and weekend
+
+```{r}
+
+NewGroup <- group_by(MyData, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n(), medianPerInterval = median(steps, na.rm=TRUE), meanPerInterval = mean(steps, na.rm=TRUE))
+
+newData <- merge(MyData, NewGroup, by.x = "interval", by.y = "interval")
+newData <- mutate(newData, steps = ifelse(is.na(steps), medianPerInterval, steps))
+newData$typeDay <- ifelse(weekdays(as.Date(newData$date)) %in% c("sábado", "domingo"), "weekend", "weekday")
+
+print(head(newData, 10))
+print(table(newData$typeDay))
+
+```
+
+### Comparing weekday and weekend
+
+```{r}
+
+NewGroup <- select(newData, interval, steps, typeDay)
+NewGroup <- filter(NewGroup, typeDay == "weekend")
+NewGroup <- group_by(NewGroup, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
+
+p1 <- ggplot(NewGroup, 
+       aes(x = interval, y = stepsPerInterval, group = 1, color = I("red"))) + 
+       geom_line() + ylim(0, 12000) + ggtitle("weekend")
+
+NewGroup <- select(newData, interval, steps, typeDay)
+NewGroup <- filter(NewGroup, typeDay == "weekday")
+NewGroup <- group_by(NewGroup, interval)
+NewGroup <- summarise(NewGroup, stepsPerInterval = sum(steps, na.rm=TRUE), daysPerInterval = n())
+
+p2 <- ggplot(NewGroup, 
+       aes(x = interval, y = stepsPerInterval, group = 1, color = I("red"))) + 
+       geom_line() + ylim(0, 12000) + ggtitle("weekday")
+
+ggarrange(p1, p2, ncol = 1, nrow = 2)
+w5 <- p1
+w6 <- p2
+
+ggarrange(w1, w2, w3, w4, w5, w6, ncol = 2, nrow = 3)
+
+```
+
+End of this report
